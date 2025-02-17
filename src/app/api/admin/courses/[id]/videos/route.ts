@@ -6,7 +6,7 @@ import { checkPermission } from '@/middleware/checkPermission';
 // Add video to course
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authCheck = await checkPermission(['admin', 'manage_courses'])(request);
@@ -17,10 +17,12 @@ export async function POST(
       );
     }
 
+    const id = (await params).id;
+
     const videoData = await request.json();
     await connectToDatabase();
 
-    const course = await Course.findById(params.id);
+    const course = await Course.findById(id);
     if (!course) {
       return NextResponse.json(
         { error: 'Course not found' },
@@ -43,7 +45,7 @@ export async function POST(
 // Update video order
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authCheck = await checkPermission(['admin', 'manage_courses'])(request);
@@ -54,10 +56,12 @@ export async function PATCH(
       );
     }
 
+    const id = (await params).id;
+
     const { videos } = await request.json();
     await connectToDatabase();
-    console.log(params.id)
-    const course = await Course.findById(params.id);
+
+    const course = await Course.findById(id);
     if (!course) {
       return NextResponse.json(
         { error: 'Course not found' },

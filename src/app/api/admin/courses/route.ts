@@ -9,7 +9,10 @@ export async function GET(request: Request) {
     // Check admin permissions
     const permissionCheck = await checkPermission(['admin', 'manage_courses'])(request);
     if (permissionCheck.success !== true) {
-      return permissionCheck;
+      return NextResponse.json(
+        { error: permissionCheck.error },
+        { status: 401 }
+      );
     }
 
     // Connect to database
@@ -49,7 +52,10 @@ export async function POST(request: Request) {
     // Check admin permissions
     const permissionCheck = await checkPermission(['admin', 'manage_courses'])(request);
     if (permissionCheck.success !== true) {
-      return permissionCheck;
+      return NextResponse.json(
+        { error: permissionCheck.error },
+        { status: 401 }
+      );
     }
 
     // Parse request body

@@ -4,13 +4,14 @@ import { ObjectId } from 'mongodb';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { db } = await connectToDatabase();
+    const id = (await params).id;
 
     // Validate if the ID is a valid ObjectId
-    if (!ObjectId.isValid(params.id)) {
+    if (!ObjectId.isValid(id)) {
       return NextResponse.json(
         { error: 'Invalid image ID' },
         { status: 400 }
@@ -18,11 +19,11 @@ export async function GET(
     }
 
     const image = await db.collection('images').findOne({
-      _id: new ObjectId(params.id)
+      _id: new ObjectId(id)
     });
 
     if (!image) {
-      console.error('Image not found:', params.id);
+      console.error('Image not found:', id);
       return NextResponse.json(
         { error: 'Image not found' },
         { status: 404 }

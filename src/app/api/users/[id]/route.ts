@@ -5,7 +5,7 @@ import { ObjectId } from 'mongodb';
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authCheck = await checkPermission(['admin'])(request);
@@ -17,6 +17,7 @@ export async function PATCH(
     }
 
     const { name, permissions, accessibleCourses } = await request.json();
+    const id = (await params).id;
     const { db } = await connectToDatabase();
 
     // Get the admin user's info from the auth check
@@ -43,7 +44,7 @@ export async function PATCH(
     }));
 
     const result = await db.collection('users').updateOne(
-      { _id: new ObjectId(params.id) },
+      { _id: new ObjectId(id) },
       { 
         $set: {
           ...(name && { name }),
@@ -62,7 +63,7 @@ export async function PATCH(
     }
 
     const updatedUser = await db.collection('users').findOne(
-      { _id: new ObjectId(params.id) },
+      { _id: new ObjectId(id) },
       { projection: { password: 0 } }
     );
 
@@ -78,7 +79,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authCheck = await checkPermission(['admin'])(request);
@@ -90,9 +91,10 @@ export async function DELETE(
     }
 
     const { db } = await connectToDatabase();
+    const id = (await params).id;
 
     const result = await db.collection('users').deleteOne({
-      _id: new ObjectId(params.id)
+      _id: new ObjectId(id)
     });
 
     if (!result.deletedCount) {

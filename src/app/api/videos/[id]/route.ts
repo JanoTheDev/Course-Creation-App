@@ -4,21 +4,22 @@ import { ObjectId } from 'mongodb';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { db } = await connectToDatabase();
+    const id = (await params).id;
     let videoDoc;
 
     // Find video document
-    if (params.id.includes('.mp4')) {
+    if (id.includes('.mp4')) {
       videoDoc = await db.collection('videos').findOne({
-        filename: params.id
+        filename: id
       });
     } else {
       try {
         videoDoc = await db.collection('videos').findOne({
-          _id: new ObjectId(params.id)
+          _id: new ObjectId(id)
         });
       } catch (e) {
         return NextResponse.json(
@@ -82,14 +83,15 @@ export async function GET(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { db } = await connectToDatabase();
+    const id = (await params).id;
     
     // Delete from database
     const result = await db.collection('videos').deleteOne({
-      _id: new ObjectId(params.id)
+      _id: new ObjectId(id)
     });
 
     if (result.deletedCount === 0) {

@@ -8,11 +8,11 @@ import User from "@/models/User";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Await params before using them
-    const { id } = await params;
+    const id = (await params).id;
 
     const { db } = await connectToDatabase();
 
@@ -78,18 +78,18 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { params } = context; // Ensure params is awaited
-    if (!params || !params.id) {
+    const id = (await params).id; 
+    if (!params || !id) {
       return NextResponse.json({ error: "Missing course ID" }, { status: 400 });
     }
 
-    if (!ObjectId.isValid(params.id)) {
+    if (!ObjectId.isValid(id)) {
       return NextResponse.json({ error: "Invalid course ID" }, { status: 400 });
     }
-    const courseId = new ObjectId(params.id);
+    const courseId = new ObjectId(id);
 
     const authCheck = await checkPermission(["admin", "manage_courses"])(
       request
@@ -138,7 +138,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check permissions
@@ -149,11 +149,12 @@ export async function DELETE(
       return NextResponse.json({ error: authCheck.error }, { status: 401 });
     }
 
+    const id = (await params).id;
     const { db } = await connectToDatabase();
 
     // Delete the course
     const result = await db.collection("courses").deleteOne({
-      _id: new ObjectId(params.id),
+      _id: new ObjectId(id),
     });
 
     if (result.deletedCount === 0) {
@@ -162,7 +163,7 @@ export async function DELETE(
 
     // Also delete associated videos
     await db.collection("videos").deleteMany({
-      courseId: new ObjectId(params.id),
+      courseId: new ObjectId(id),
     });
 
     return NextResponse.json({

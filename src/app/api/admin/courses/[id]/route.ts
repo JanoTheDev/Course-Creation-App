@@ -1,35 +1,38 @@
-import { NextResponse } from 'next/server';
-import { connectToDatabase } from '@/lib/mongodb';
-import Course from '@/models/Course';
-import { checkPermission } from '@/middleware/checkPermission';
+import { NextRequest, NextResponse } from "next/server";
+import { connectToDatabase } from "@/lib/mongodb";
+import Course from "@/models/Course";
+import { checkPermission } from "@/middleware/checkPermission";
 
 // GET single course
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const permissionCheck = await checkPermission(['admin', 'manage_courses'])(request);
-    if (permissionCheck.success !== true) {
-      return permissionCheck;
+    const permissionCheck = await checkPermission(["admin", "manage_courses"])(
+      request
+    );
+    if (!permissionCheck.success) {
+      return NextResponse.json(
+        { error: permissionCheck.error },
+        { status: 401 }
+      );
     }
 
+    const id = (await params).id;
     await connectToDatabase();
-    const course = await Course.findById(params.id)
-      .populate('mainInstructor', 'name')
-      .populate('collaborators', 'name');
+    const course = await Course.findById(id)
+      .populate("mainInstructor", "name")
+      .populate("collaborators", "name");
 
     if (!course) {
-      return NextResponse.json(
-        { error: 'Course not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
 
     return NextResponse.json(course);
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to fetch course' },
+      { error: "Failed to fetch course" },
       { status: 500 }
     );
   }
@@ -37,37 +40,40 @@ export async function GET(
 
 // UPDATE course
 export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const permissionCheck = await checkPermission(['admin', 'manage_courses'])(request);
+    const permissionCheck = await checkPermission(["admin", "manage_courses"])(
+      request
+    );
     if (permissionCheck.success !== true) {
-      return permissionCheck;
+      return NextResponse.json(
+        { error: permissionCheck.error },
+        { status: 401 }
+      );
     }
 
+    const id = (await params).id;
     const updates = await request.json();
     await connectToDatabase();
 
     const course = await Course.findByIdAndUpdate(
-      params.id,
+      id,
       { $set: updates },
       { new: true, runValidators: true }
     )
-      .populate('mainInstructor', 'name')
-      .populate('collaborators', 'name');
+      .populate("mainInstructor", "name")
+      .populate("collaborators", "name");
 
     if (!course) {
-      return NextResponse.json(
-        { error: 'Course not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
 
     return NextResponse.json(course);
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to update course' },
+      { error: "Failed to update course" },
       { status: 500 }
     );
   }
@@ -75,30 +81,33 @@ export async function PATCH(
 
 // DELETE course
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const permissionCheck = await checkPermission(['admin', 'manage_courses'])(request);
-    if (permissionCheck.success !== true) {
-      return permissionCheck;
-    }
-
-    await connectToDatabase();
-    const course = await Course.findByIdAndDelete(params.id);
-
-    if (!course) {
+    const permissionCheck = await checkPermission(["admin", "manage_courses"])(
+      request
+    );
+    if (!permissionCheck.success) {
       return NextResponse.json(
-        { error: 'Course not found' },
-        { status: 404 }
+        { error: permissionCheck.error },
+        { status: 401 }
       );
     }
 
-    return NextResponse.json({ message: 'Course deleted successfully' });
+    const id = (await params).id;
+    await connectToDatabase();
+    const course = await Course.findByIdAndDelete(id);
+
+    if (!course) {
+      return NextResponse.json({ error: "Course not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ message: "Course deleted successfully" });
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to delete course' },
+      { error: "Failed to delete course" },
       { status: 500 }
     );
   }
-} 
+}
