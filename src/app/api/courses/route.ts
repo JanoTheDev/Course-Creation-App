@@ -20,11 +20,6 @@ export async function POST(request: Request) {
 
     const data = await request.json();
 
-    // Enforce private status for paid courses
-    if (data.price > 0) {
-      data.privacy = 'private';
-    }
-
     // Validate required fields
     if (!data.title || !data.description || !data.image || !data.instructorName) {
       return NextResponse.json(
