@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PageLayout from '@/components/PageLayout';
 import AdminLayout from '@/components/AdminLayout';
@@ -37,7 +37,6 @@ export default function NewCourse() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [instructors, setInstructors] = useState<Instructor[]>([]);
   const [formData, setFormData] = useState<CourseFormData>({
     title: '',
     description: '',

@@ -31,16 +31,6 @@ export default function AdminCourses() {
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
   const router = useRouter();
 
-  const [formData, setFormData] = useState<Course>({
-    title: '',
-    description: '',
-    image: '',
-    instructorName: '',
-    privacy: 'public',
-    videos: [],
-    price: 0,
-  });
-
   useEffect(() => {
     fetchCourses();
   }, []);
